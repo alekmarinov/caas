@@ -15,27 +15,32 @@ local function handlepost(cb)
 end
 
 server.create()
-    .handle("POST", "^/reg/(.*)$", handlepost(function(req, res, command)
+    .handle("POST", "^/job/(.*)$", handlepost(function(req, res, command)
         local jobname = req.params[1]
-        local ok, err = jobs.register(jobname, command)
-        if ok then
-            res.close(string.format("Job %s registered with command = '%s'\n", jobname, command))
+        if command ~= "" then
+            -- register command
+            local ok, err = jobs.register(jobname, command)
+            if ok then
+                res.close(string.format("Job %s registered with command = '%s'\n", jobname, command))
+            else
+                res.close(err.."\n")
+            end
         else
-            res.close(err.."\n")
+            -- execute command
+            local ok, err = jobs.start(req.params[1], res.write)
+            if not ok then
+                res.close(err.."\n")
+            end
         end
     end))
-    .handle("POST", "^/run/(.*)$", function(req, res)
-        local ok, err = jobs.start(req.params[1], res.write)
-        if not ok then
-            res.close(err.."\n")
-        end
-    end)
     .handle("DELETE", "^/job/(.*)/(.*)$", function(req, res)
         local jobname, instid = table.unpack(req.params)
         instid = tonumber(instid)
+        local instance = jobs.getinstance(jobname, instid)
+        local wasrunning = instance and instance.running
         local ok, err = jobs.stop(req.params[1], instid)
         if ok then
-            res.close(string.format("Job %s:%d has been stopped\n", jobname, instid))
+            res.close(wasrunning and string.format("Job %s:%d has been deleted\n", jobname, instid))
         else
             res.close(err.."\n")
         end
@@ -49,7 +54,7 @@ server.create()
             res.close(err.."\n")
         end
     end)
-    .handle("GET", "^/log/(.-)/(.*)$", function(req, res)
+    .handle("GET", "^/job/(.-)/(.*)$", function(req, res)
         local jobname, instid = table.unpack(req.params)
         instid = tonumber(instid)
         local listencb
@@ -65,7 +70,7 @@ server.create()
         end
         jobs.listen(jobname, instid, listencb)
     end)
-    .handle("GET", "^/status/?(.*)$", function(req, res)
+    .handle("GET", "^/job/?(.*)$", function(req, res)
         local empty = true
         local jobname = req.params[1]
         for jname, job in pairs(jobs.jobs) do
@@ -73,10 +78,10 @@ server.create()
                 empty = false
                 if #job.instances > 0 then
                     for i, instance in ipairs(job.instances) do
-                        res.write(string.format("%s:%d %s\n", jname, i, instance.running and "running" or "stopped"))
+                        res.write(string.format("%s:%d %s (%s)\n", jname, i, instance.running and "running" or "finished", job.cmdline))
                     end
                 else
-                    res.write(string.format("%s has no instances\n", jname))
+                    res.write(string.format("%s has no instances (%s)\n", jname, job.cmdline))
                 end
             end
         end
