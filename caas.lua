@@ -40,7 +40,7 @@ server.create()
         local wasrunning = instance and instance.running
         local ok, err = jobs.stop(req.params[1], instid)
         if ok then
-            res.close(wasrunning and string.format("Job %s:%d has been deleted\n", jobname, instid))
+            res.close(wasrunning and string.format("Job %s:%d has been stopped\n", jobname, instid))
         else
             res.close(err.."\n")
         end

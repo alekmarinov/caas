@@ -14,27 +14,27 @@ $lua caas.lua
 luvhttpd is listening on 0.0.0.0:8080
 
 # On another host
-$curl -d './test.sh' http://localhost:8080/reg/test1
-Job test1 registered with command = './test.sh'
+$curl -d './test.sh' http://localhost:8080/job/test
+Job test registered with command = './test.sh'
 
-$curl -X POST http://localhost:8080/run/test1
+$curl -X POST http://localhost:8080/job/test
 1
 2
 3
 4
 ^C
-$curl http://localhost:8080/status/test1
-test1:1 running
-$curl http://localhost:8080/log/test1/1
+$curl http://localhost:8080/job/test
+test:1 running (./test.sh)
+$curl http://localhost:8080/job/test/1
 76
 77
 78
 79
 ^C
-$curl -X DELETE http://localhost:8080/job/test1/1
-Job test1:1 has been stopped
-$curl http://localhost:8080/status
-Job test1:1 has been stopped
-$curl -X DELETE http://localhost:8080/job/test1
-Job test1 has been destroyed
+$curl -X DELETE http://localhost:8080/job/test/1
+Job test:1 has been stopped
+$curl http://localhost:8080/job
+test:1 finished (./test.sh)
+$curl -X DELETE http://localhost:8080/job/test
+Job test has been destroyed
 ```
