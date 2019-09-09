@@ -1,7 +1,9 @@
 local uv  = require "luv"
+local shlex = require "dromozoa.shlex"
 
 local _M = {
-    jobs = {}
+    jobs = {},
+    log = print
 }
 
 function _M.register(jobname, cmdline)
@@ -34,16 +36,21 @@ function _M.start(jobname, ondata)
 
     local stdout = uv.new_pipe(false)
     local stderr = uv.new_pipe(false)
-    instance.child, instance.pid = uv.spawn(job.cmdline, {
-        stdio = {nil, stdout, stderr}
-    }, function (code, signal) 
-        uv.close(instance.child)
-        instance.running = false
-        instance.code = code
-        instance.signal = signal
-    end)
+    local stdio = {nil, stdout, stderr}
+    local args = shlex.split(job.cmdline)
+    local cmd = table.remove(args, 1)
+    _M.log(string.format("%s:%d starting %s \"%s\"", jobname, #instances, cmd, table.concat(args, "\" \"")))
+    instance.child, instance.pid = uv.spawn(cmd, { args = args, stdio = stdio }, function (code, signal)
+            _M.log(string.format("%s:%d finished (code=%s, signal=%d)", jobname, #instances, code, signal))
+            uv.close(instance.child)
+            instance.running = false
+            instance.code = code
+            instance.signal = signal
+        end)
     if not instance.child then
-        return nil, instance.pid
+        local err = instance.pid
+        _M.log(string.format("%s:%d %s", err))
+        return nil, err
     end
     instance.running = true
 
@@ -81,10 +88,6 @@ function _M.stop(jobname, instid)
         return nil, err
     end
     if instance.running then
-        if not instance.child then
-            for i,v in pairs(instance) do print(i,v) end
-            error("internal error")
-        end
         uv.process_kill(instance.child)
     end
     return true
