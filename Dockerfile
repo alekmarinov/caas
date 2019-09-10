@@ -1,7 +1,7 @@
 FROM abaez/luarocks
 
 RUN apk update && apk add cmake g++ 
-RUN luarocks install luv dromozoa-shlex
+RUN luarocks install luv && luarocks install dromozoa-shlex
 
 ADD *.lua /app/
 ADD test.sh /app/
