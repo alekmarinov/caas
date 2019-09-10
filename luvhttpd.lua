@@ -46,6 +46,10 @@ function _M.addheaderline(req, line)
         return nil
     end
     name = string.lower(name)
+    if name == "host" then
+        req.host, req.port = value:match("([^:]*):(%d+)")
+        req.port = tonumber(req.port)
+    end
     if req.headers[name] then
         req.headers[name] = req.headers[name] .. "," .. value
     else
@@ -167,7 +171,9 @@ end
 
 function _M.makerequest(client)
     local req = {
-        client = client
+        client = client,
+        host = _M.host,
+        port = _M.port
     }
     return req
 end
