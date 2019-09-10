@@ -100,7 +100,9 @@ server.create()
                     for i, instance in ipairs(job.instances) do
                         res.write(string.format("%s:%d %s (%s)\n", jname, i, instance.running and "running" or "finished", job.cmdline))
                     end
-                    res.write(string.format("To see the result from the last instance try http://%s:%s/job/%s/last\n", req.host or "host", req.port or "port", jobname))
+                    if jobname ~= "" then
+                        res.write(string.format("To see the result from the last instance try http://%s:%s/job/%s/last\n", req.host or "host", req.port or "port", jobname))
+                    end
                 else
                     res.write(string.format("%s has no instances (%s)\n", jname, job.cmdline))
                 end
