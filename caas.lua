@@ -57,6 +57,17 @@ server.create()
     .handle("GET", "^/job/(.-)/(.*)$", function(req, res)
         local jobname, instid = table.unpack(req.params)
         instid = tonumber(instid)
+        local instance, err = jobs.getinstance(jobname, instid)
+        if not instance then
+            res.close(err.."\n")
+            return
+        end
+        for _, line in ipairs(instance.log) do
+            res.write(line[1] or line[2])
+        end
+        if not instance.running then
+            res.close()
+        end
         local listencb
         listencb = function (outdata, errdata)
             local data = outdata or errdata
