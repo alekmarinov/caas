@@ -56,7 +56,16 @@ server.create()
     end)
     .handle("GET", "^/job/(.-)/(.*)$", function(req, res)
         local jobname, instid = table.unpack(req.params)
-        instid = tonumber(instid)
+        local job, err = jobs.get(jobname)
+        if not job then
+            res.close(err.."\n")
+            return
+        end
+        if string.lower(instid) == "last" then
+            instid = #job.instances
+        else
+            instid = tonumber(instid)
+        end
         local instance, err = jobs.getinstance(jobname, instid)
         if not instance then
             res.close(err.."\n")
@@ -91,6 +100,7 @@ server.create()
                     for i, instance in ipairs(job.instances) do
                         res.write(string.format("%s:%d %s (%s)\n", jname, i, instance.running and "running" or "finished", job.cmdline))
                     end
+                    res.write(string.format("To see the result from the last instance try http://%s:%s/job/%s/last\n", req.host or "host", req.port or "port", jobname))
                 else
                     res.write(string.format("%s has no instances (%s)\n", jname, job.cmdline))
                 end
