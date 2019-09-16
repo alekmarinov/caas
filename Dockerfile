@@ -4,7 +4,6 @@ RUN apk update && apk add cmake g++
 RUN luarocks install luv && luarocks install dromozoa-shlex
 
 ADD *.lua /app/
-ADD test.sh /app/
 WORKDIR /app
 EXPOSE 8080
 
