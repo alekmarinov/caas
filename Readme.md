@@ -10,7 +10,7 @@ luvhttpd is listening on 0.0.0.0:8080
 
 # On another host
 $curl -d 'sh -c "for i in $(seq 1 100); do echo $i; sleep 1; done"' http://localhost:8080/job/counter
-Job test registered with command = 'sh -c "for i in $(seq 1 100); do echo $i; sleep 1; done"'
+Job counter registered with command = 'sh -c "for i in $(seq 1 100); do echo $i; sleep 1; done"'
 
 $curl -X POST http://localhost:8080/job/counter
 1
