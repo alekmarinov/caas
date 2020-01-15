@@ -10,7 +10,8 @@ description = {
 caas is a server API allowing to register arbitrary shell commands and execute them remotely.
    ]],
    license = "MIT",
-   homepage = "https://github.com/alekmarinov/caas"
+   homepage = "https://github.com/alekmarinov/caas",
+   maintainer = "Alexander Marinov <alekmarinov@gmail.com>"
 }
 dependencies = {
    "dromozoa-shlex >= 1.2",
