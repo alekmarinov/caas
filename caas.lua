@@ -3,7 +3,7 @@ local jobs  = require "caas.jobs"
 local lfs = require "lfs"
 
 server._SERVER_SOFTWARE = 'caas'
-server._VERSION='1.0.1'
+server._VERSION='1.0.2'
 
 local unpack = unpack or table.unpack
 
@@ -40,10 +40,18 @@ local function execout(cmd)
     return s
 end
 
+local function xpattern(pattern)
+    local baseuri = os.getenv("CAAS_BASE_URI")
+    if baseuri then
+        pattern = baseuri..pattern
+    end
+    return string.format("^%s$", pattern)
+end
+
 jobs.init()
 server.create(os.getenv("CAAS_SERVER_PORT"), os.getenv("CAAS_SERVER_ADDR"))
     -- returns directory listings or file content
-    .handle("GET", "^/dir/?(.*)$", function(req, res)
+    .handle("GET", xpattern("/dir/?(.*)"), function(req, res)
         local filename = req.params[1]
         if filename:sub(1, 1) ~= "/" then
             filename = "/"..filename
@@ -148,7 +156,7 @@ server.create(os.getenv("CAAS_SERVER_PORT"), os.getenv("CAAS_SERVER_ADDR"))
         end
     end)
     -- registers new or starts existing job
-    .handle("POST", "^/job/(.*)$", handlepost(function(req, res, command)
+    .handle("POST", xpattern("/job/(.*)"), handlepost(function(req, res, command)
         local jobname = req.params[1]
         if command ~= "" then
             -- register command
@@ -167,7 +175,7 @@ server.create(os.getenv("CAAS_SERVER_PORT"), os.getenv("CAAS_SERVER_ADDR"))
         end
     end))
     -- stops job instance if running
-    .handle("DELETE", "^/job/(.*)/(.*)$", function(req, res)
+    .handle("DELETE", xpattern("/job/(.*)/(.*)"), function(req, res)
         local jobname, instid = unpack(req.params)
         instid = tonumber(instid)
         local instance = jobs.getinstance(jobname, instid)
@@ -180,7 +188,7 @@ server.create(os.getenv("CAAS_SERVER_PORT"), os.getenv("CAAS_SERVER_ADDR"))
         end
     end)
     -- destroys a job
-    .handle("DELETE", "^/job/(.*)$", function(req, res)
+    .handle("DELETE", xpattern("/job/(.*)"), function(req, res)
         local jobname = req.params[1]
         local ok, err = jobs.destroy(jobname)
         if ok then
@@ -190,7 +198,7 @@ server.create(os.getenv("CAAS_SERVER_PORT"), os.getenv("CAAS_SERVER_ADDR"))
         end
     end)
     -- returns the log of a job instance
-    .handle("GET", "^/job/(.-)/(.*)$", function(req, res)
+    .handle("GET", xpattern("/job/(.-)/(.*)"), function(req, res)
         local jobname, instid = unpack(req.params)
         local job, err = jobs.get(jobname)
         if not job then
@@ -227,7 +235,7 @@ server.create(os.getenv("CAAS_SERVER_PORT"), os.getenv("CAAS_SERVER_ADDR"))
         jobs.listen(jobname, instid, listencb)
     end)
     -- returns all jobs and info about their instance statuses
-    .handle("GET", "^/job/?(.*)$", function(req, res)
+    .handle("GET", xpattern("/job/?(.*)"), function(req, res)
         local empty = true
         local jobname = req.params[1]
         for jname, job in pairs(jobs.jobs) do
