@@ -3,7 +3,7 @@ local jobs  = require "caas.jobs"
 local lfs = require "lfs"
 
 server._SERVER_SOFTWARE = 'caas'
-server._VERSION='1.0.0'
+server._VERSION='1.0.1'
 
 local unpack = unpack or table.unpack
 
@@ -254,14 +254,5 @@ server.create(os.getenv("CAAS_SERVER_PORT"), os.getenv("CAAS_SERVER_ADDR"))
         end
         res.close()
     end)
-    -- ops
-    .handle("GET", "^/ops/heartbeat$", function(req, res) res.close() end)
-    .handle("GET", "^/ops/version$", function(req, res) res.close(string.format([[
-{
-    "version": "%s",
-    "build_number": "%s",
-    "date": "%s"
-}
-    ]], os.getenv("VERSION"), os.getenv("BUILD_NUMBER"), os.getenv("DATE"))) end)
 
 .start()

@@ -6,7 +6,7 @@ API turning shell commands into API
 
 ```bash
 $lua caas.lua
-caas 1.0.0 is listening on 0.0.0.0:8080
+caas 1.0.1 is listening on 0.0.0.0:8080
 
 # On another host
 $curl -d 'sh -c "for i in $(seq 1 100); do echo $i; sleep 1; done"' http://localhost:8080/job/counter
