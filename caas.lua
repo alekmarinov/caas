@@ -3,8 +3,9 @@ local jobs  = require "caas.jobs"
 local lfs = require "lfs"
 
 server._SERVER_SOFTWARE = 'caas'
-server._VERSION='1.0.2'
+server._VERSION='1.0.3'
 
+local BASE_URI = os.getenv("CAAS_BASE_URI") or ""
 local unpack = unpack or table.unpack
 
 local function handlepost(cb)
@@ -41,11 +42,7 @@ local function execout(cmd)
 end
 
 local function xpattern(pattern)
-    local baseuri = os.getenv("CAAS_BASE_URI")
-    if baseuri then
-        pattern = baseuri..pattern
-    end
-    return string.format("^%s$", pattern)
+    return string.format("^%s%s$", BASE_URI, pattern)
 end
 
 jobs.init()
@@ -121,7 +118,7 @@ server.create(os.getenv("CAAS_SERVER_PORT"), os.getenv("CAAS_SERVER_ADDR"))
                     os.date("%x %X", attr.modification),
                     attr.size
                 ))
-                res.write(string.format("<a href='/dir%s%s", filename, attr.name))
+                res.write(string.format("<a href='%s/dir%s%s", BASE_URI, filename, attr.name))
                 if attr.mode == "directory" then
                     res.write("/")
                 end
