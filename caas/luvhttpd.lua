@@ -8,6 +8,7 @@ local _M = {
     handlers = {},
     log = print
 }
+local unpack = unpack or table.unpack
 
 function _M.create(port, host)
     port = port or 8080
@@ -15,7 +16,7 @@ function _M.create(port, host)
 
     local server = uv.new_tcp()
     server:bind(host, port)
-    _M.log(string.format("%s is listening on %s:%s", _M._SERVER_SOFTWARE, host, port))
+    _M.log(string.format("%s %s is listening on %s:%s", _M._SERVER_SOFTWARE, _M._VERSION, host, port))
     server:listen(_M._MAX_CONNECTIONS, function(err)
         -- Make sure there was no problem setting up listen
         assert(not err, err)
@@ -31,8 +32,10 @@ end
 function _M.parsecommandline(req)
     assert(type(req.cmdline) == "string")
     local cmdparts = {}
-    string.gsub(req.cmdline, "(%S*)(%S*)(%S*)", function (p) table.insert(cmdparts, p) end)
-    req.method, req.uri, req.version = table.unpack(cmdparts)
+    for w in string.gmatch(req.cmdline, "%S+") do
+        table.insert(cmdparts, w)
+    end
+    req.method, req.uri, req.version = unpack(cmdparts)
     req.method = string.upper (req.method or 'GET')
     local parsed = _M.parseuri(req.uri or '/')
     req.path = parsed.path

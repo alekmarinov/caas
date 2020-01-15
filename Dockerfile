@@ -1,10 +1,13 @@
 FROM abaez/luarocks
 
-RUN apk update && apk add cmake g++ 
-RUN luarocks install luv && luarocks install dromozoa-shlex
-
-ADD *.lua /app/
+COPY . /app
 WORKDIR /app
+
+RUN apk update && apk add cmake g++ 
+RUN luarocks make rockspec
+
 EXPOSE 8080
 
-CMD ["lua", "caas.lua"]
+ENV CAAS_JOBS_DIR=/caas
+
+CMD caas

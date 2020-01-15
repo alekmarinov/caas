@@ -1,12 +1,12 @@
 # CAAS (Command-As-A-Service)
 
-Manages registration and execution of server side commands
+API turning shell commands into API
 
 ## Example
 
 ```bash
 $lua caas.lua
-luvhttpd is listening on 0.0.0.0:8080
+caas 1.0.0 is listening on 0.0.0.0:8080
 
 # On another host
 $curl -d 'sh -c "for i in $(seq 1 100); do echo $i; sleep 1; done"' http://localhost:8080/job/counter
@@ -19,7 +19,7 @@ $curl -X POST http://localhost:8080/job/counter
 4
 ^C
 $curl http://localhost:8080/job/counter
-counter:1 running (sh -c "for i in $(seq 1 100); do echo $i; sleep 1; done")
+2020-01-15 18:09:45 counter:1 running (sh -c "for i in $(seq 1 100); do echo $i; sleep 1; done")
 To see the result from the last instance try http://localhost:8080/job/counter/last
 
 $curl http://localhost:8080/job/counter/1
@@ -33,7 +33,7 @@ $curl -X DELETE http://localhost:8080/job/counter/1
 Job counter:1 has been stopped
 
 $curl http://localhost:8080/job
-counter:1 finished (sh -c "for i in $(seq 1 100); do echo $i; sleep 1; done")
+2020-01-15 18:09:45 counter:1 success, signal 15 (sh -c "for i in $(seq 1 100); do echo $i; sleep 1; done")
 
 $curl -X DELETE http://localhost:8080/job/counter
 Job counter has been destroyed

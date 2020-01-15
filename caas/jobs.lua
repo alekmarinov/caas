@@ -1,12 +1,31 @@
+local lfs = require "lfs"
 local uv  = require "luv"
 local shlex = require "dromozoa.shlex"
+local persistence = require "caas.persistence"
+
+local JOBS_DIR_ENV = "CAAS_JOBS_DIR"
 
 local _M = {
     jobs = {},
     log = print
 }
 
-function _M.register(jobname, cmdline)
+function _M.init()
+    local jobsdir = os.getenv(JOBS_DIR_ENV)
+    if not jobsdir then
+        jobsdir = lfs.currentdir()
+        _M.log(string.format("Warning! %s is not set! Will use %s for jobs directory.", JOBS_DIR_ENV, jobsdir))
+    end
+
+    persistence.init(jobsdir)
+    local jobs = assert(persistence.loadjobs())
+    for jobname, cmdline in pairs(jobs) do
+        _M.log(string.format("Auto-registering job %s with command `%s'", jobname, cmdline))
+        _M.register(jobname, cmdline, true)
+    end
+end
+
+function _M.register(jobname, cmdline, nosave)
     if _M.jobs[jobname] then
         return nil, string.format("Job %s is already registered", jobname)
     end
@@ -17,6 +36,10 @@ function _M.register(jobname, cmdline)
         cmdline = cmdline,
         instances = {}
     }
+    if not nosave then
+        local file = persistence.savejob(jobname, cmdline)
+        _M.log(string.format("job %s is saved to %s", jobname, file))
+    end
     return true
 end
 
@@ -49,7 +72,8 @@ function _M.start(jobname, ondata)
         end)
     if not instance.child then
         local err = instance.pid
-        _M.log(string.format("%s:%d %s", err))
+        instance.code = err
+        instance.log = {{nil, err}}
         return nil, err
     end
     instance.running = true
@@ -104,6 +128,7 @@ function _M.destroy(jobname)
         end
     end
     _M.jobs[jobname] = nil
+    persistence.deletejob(jobname)
     return true
 end
 
