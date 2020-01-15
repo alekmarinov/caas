@@ -17,7 +17,7 @@ function _M.create(port, host)
     local server = uv.new_tcp()
     server:bind(host, port)
     _M.log(string.format("%s %s is listening on %s:%s", _M._SERVER_SOFTWARE, _M._VERSION, host, port))
-    server:listen(_M._MAX_CONNECTIONS, function(err)
+    assert(server:listen(_M._MAX_CONNECTIONS, function(err)
         -- Make sure there was no problem setting up listen
         assert(not err, err)
 
@@ -25,7 +25,7 @@ function _M.create(port, host)
         local client = uv.new_tcp()
         server:accept(client)
         _M.onconnection(client)
-    end)
+    end))
     return _M
 end
 
