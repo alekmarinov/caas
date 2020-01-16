@@ -3,7 +3,7 @@ local jobs  = require "caas.jobs"
 local lfs = require "lfs"
 
 server._SERVER_SOFTWARE = 'caas'
-server._VERSION='1.0.3'
+server._VERSION='1.0.4'
 
 local BASE_URI = os.getenv("CAAS_BASE_URI") or ""
 local unpack = unpack or table.unpack
