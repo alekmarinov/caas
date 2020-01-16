@@ -103,11 +103,13 @@ server.create(os.getenv("CAAS_SERVER_PORT"), os.getenv("CAAS_SERVER_ADDR"))
                 if file:sub(1,1) ~= "." then
                     local fullname = mkpath(filename, file)
                     local attr = lfs.attributes(fullname)
-                    attr.name = file
-                    if attr.mode == "directory" then
-                        table.insert(dirs, attr)
-                    elseif attr.mode == "file" then
-                        table.insert(files, attr)
+                    if attr then
+                        attr.name = file
+                        if attr.mode == "directory" then
+                            table.insert(dirs, attr)
+                        elseif attr.mode == "file" then
+                            table.insert(files, attr)
+                        end
                     end
                 end
             end
