@@ -4,9 +4,10 @@ local EOL = "\r\n"
 local _M = {
     _SERVER_SOFTWARE = "luvhttpd",
     _VERSION = "0.1",
+    _BASE_URI = "",
     _MAX_CONNECTIONS = 128,
     handlers = {},
-    log = print
+    log = print,
 }
 local unpack = unpack or table.unpack
 
@@ -158,6 +159,7 @@ function _M.sendresheaders(res)
 end
 
 function _M.handle(method, pattern, handler)
+    pattern = string.format("^%s%s$", _M._BASE_URI, pattern)
     table.insert(_M.handlers, { method, pattern, handler })
     return _M
 end

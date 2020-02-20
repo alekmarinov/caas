@@ -1,12 +1,24 @@
+local lfs = require "lfs"
 local server = require "caas.luvhttpd"
 local jobs  = require "caas.jobs"
-local lfs = require "lfs"
 
-server._SERVER_SOFTWARE = 'caas'
-server._VERSION='1.0.4'
+server._SERVER_SOFTWARE = "caas"
+server._VERSION = "1.1.0"
+server._BASE_URI = os.getenv("CAAS_BASE_URI") or ""
 
-local BASE_URI = os.getenv("CAAS_BASE_URI") or ""
+caas = setmetatable({}, { __index = server })
+
 local unpack = unpack or table.unpack
+
+local function usage()
+    print(string.format("%s %s", caas._SERVER_SOFTWARE, caas._VERSION))
+    print(string.format(
+        "Usage:\n\t%s [--plugins PLUGINS]\n"..
+        "Where:\n"..
+        "\tPLUGINS  - Comma separated list of plugin NAMEs causing a module 'caas-plugin-NAME' to be loaded"
+        , arg[0]))
+    os.exit(1)
+end
 
 local function handlepost(cb)
     return function(req, res)
@@ -41,21 +53,34 @@ local function execout(cmd)
     return s
 end
 
-local function xpattern(pattern)
-    return string.format("^%s%s$", BASE_URI, pattern)
+-- entry point
+
+-- process program arguments
+local pluginsnames = {}
+for i = 1, #arg do
+    if arg[i] == '--help' or arg[i] == '-h' then
+        usage()
+    elseif arg[i] == '--plugins' or arg[i] == '-p' then
+        i = i + 1
+        local plugins = arg[i]
+        -- parse comma separated plugin names
+        for name in string.gmatch(plugins, '([^,]+)') do
+            table.insert(pluginsnames, name)
+        end
+    end
 end
 
 jobs.init()
-server.create(os.getenv("CAAS_SERVER_PORT"), os.getenv("CAAS_SERVER_ADDR"))
+caas.create(os.getenv("CAAS_SERVER_PORT"), os.getenv("CAAS_SERVER_ADDR"))
     -- returns directory listings or file content
-    .handle("GET", xpattern("/dir/?(.*)"), function(req, res)
+    .handle("GET", "/dir/?(.*)", function(req, res)
         local filename = req.params[1]
         if filename:sub(1, 1) ~= "/" then
             filename = "/"..filename
         end
         local attr, err = lfs.attributes(filename)
         if not attr then
-            return server.err_404(req, res)
+            return caas.err_404(req, res)
         end
         if attr.mode == "file" then
             local out = execout("file \""..filename:gsub("\"", "\\\"").."\"")
@@ -151,11 +176,11 @@ server.create(os.getenv("CAAS_SERVER_PORT"), os.getenv("CAAS_SERVER_ADDR"))
 ]]) 
             res.close()
         else
-            return server.err_404(req, res)
+            return caas.err_404(req, res)
         end
     end)
     -- registers new or starts existing job
-    .handle("POST", xpattern("/job/(.*)"), handlepost(function(req, res, command)
+    .handle("POST", "/job/(.*)", handlepost(function(req, res, command)
         local jobname = req.params[1]
         if command ~= "" then
             -- register command
@@ -174,7 +199,7 @@ server.create(os.getenv("CAAS_SERVER_PORT"), os.getenv("CAAS_SERVER_ADDR"))
         end
     end))
     -- stops job instance if running
-    .handle("DELETE", xpattern("/job/(.*)/(.*)"), function(req, res)
+    .handle("DELETE", "/job/(.*)/(.*)", function(req, res)
         local jobname, instid = unpack(req.params)
         instid = tonumber(instid)
         local instance = jobs.getinstance(jobname, instid)
@@ -187,7 +212,7 @@ server.create(os.getenv("CAAS_SERVER_PORT"), os.getenv("CAAS_SERVER_ADDR"))
         end
     end)
     -- destroys a job
-    .handle("DELETE", xpattern("/job/(.*)"), function(req, res)
+    .handle("DELETE", "/job/(.*)", function(req, res)
         local jobname = req.params[1]
         local ok, err = jobs.destroy(jobname)
         if ok then
@@ -197,7 +222,7 @@ server.create(os.getenv("CAAS_SERVER_PORT"), os.getenv("CAAS_SERVER_ADDR"))
         end
     end)
     -- returns the log of a job instance
-    .handle("GET", xpattern("/job/(.-)/(.*)"), function(req, res)
+    .handle("GET", "/job/(.-)/(.*)", function(req, res)
         local jobname, instid = unpack(req.params)
         local job, err = jobs.get(jobname)
         if not job then
@@ -234,7 +259,7 @@ server.create(os.getenv("CAAS_SERVER_PORT"), os.getenv("CAAS_SERVER_ADDR"))
         jobs.listen(jobname, instid, listencb)
     end)
     -- returns all jobs and info about their instance statuses
-    .handle("GET", xpattern("/job/?(.*)"), function(req, res)
+    .handle("GET", "/job/?(.*)", function(req, res)
         local empty = true
         local jobname = req.params[1]
         for jname, job in pairs(jobs.jobs) do
@@ -262,4 +287,12 @@ server.create(os.getenv("CAAS_SERVER_PORT"), os.getenv("CAAS_SERVER_ADDR"))
         res.close()
     end)
 
-.start()
+-- load plugins
+for _, name in ipairs(pluginsnames) do
+    local plugin = require('caas.plugin.'..name)
+    print(string.format('Loading plugin %s %s', plugin._NAME, plugin._VERSION))
+    plugin.init(caas)
+end
+
+-- starts caas server
+caas.start()

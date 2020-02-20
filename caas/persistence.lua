@@ -19,12 +19,8 @@ local _M = {
     jobsdir = nil
 }
 
-local function getjobfile(jobname, ext)
-    return _M.jobsdir..jobname.."."..ext
-end
-
-local function getmetricsdir(jobname)
-    return getjobfile(jobname, _M.metricsext)
+function _M.getjobfile(filename)
+    return _M.jobsdir..filename
 end
 
 function _M.init(jobsdir)
@@ -60,7 +56,7 @@ end
 
 function _M.savejob(jobname, cmdline)
     local jobfile, ok, fd, err
-    jobfile, err = getjobfile(jobname, _M.jobext)
+    jobfile, err = _M.getjobfile(jobname..".".._M.jobext)
     if not jobfile then
         return nil, err
     end
@@ -77,7 +73,7 @@ function _M.savejob(jobname, cmdline)
 end
 
 function _M.deletejob(jobname)
-    local jobfile, err = getjobfile(jobname, _M.jobext)
+    local jobfile, err = _M.getjobfile(jobname..".".._M.jobext)
     if not jobfile then
         return nil, err
     end

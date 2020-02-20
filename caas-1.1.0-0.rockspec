@@ -1,8 +1,8 @@
 package = "caas"
-version = "1.0.4-0"
+version = "1.1.0-0"
 source = {
    url = "git+https://github.com/alekmarinov/caas.git",
-   tag = "1.0.4"
+   tag = "1.1.0"
 }
 description = {
    summary = "API turning shell commands into API",
@@ -26,6 +26,7 @@ build = {
    modules = {
       ["caas.jobs"] = "caas/jobs.lua",
       ["caas.luvhttpd"] = "caas/luvhttpd.lua",
-      ["caas.persistence"] = "caas/persistence.lua"
+      ["caas.persistence"] = "caas/persistence.lua",
+      ["caas.plugin.prometheus"] = "caas/plugin/prometheus.lua",
    }
 }
