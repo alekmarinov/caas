@@ -3,7 +3,7 @@ local server = require "caas.luvhttpd"
 local jobs  = require "caas.jobs"
 
 server._SERVER_SOFTWARE = "caas"
-server._VERSION = "1.1.0"
+server._VERSION = "1.1.1"
 server._BASE_URI = os.getenv("CAAS_BASE_URI") or ""
 
 caas = setmetatable({}, { __index = server })
@@ -145,7 +145,7 @@ caas.create(os.getenv("CAAS_SERVER_PORT"), os.getenv("CAAS_SERVER_ADDR"))
                     os.date("%x %X", attr.modification),
                     attr.size
                 ))
-                res.write(string.format("<a href='%s/dir%s%s", BASE_URI, filename, attr.name))
+                res.write(string.format("<a href='%s/dir%s%s", server._BASE_URI, filename, attr.name))
                 if attr.mode == "directory" then
                     res.write("/")
                 end
