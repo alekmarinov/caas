@@ -3,7 +3,7 @@ local server = require "caas.luvhttpd"
 local jobs  = require "caas.jobs"
 
 server._SERVER_SOFTWARE = "caas"
-server._VERSION = "1.1.1"
+server._VERSION = "1.2.0"
 server._BASE_URI = os.getenv("CAAS_BASE_URI") or ""
 
 caas = setmetatable({}, { __index = server })
@@ -173,7 +173,7 @@ caas.create(os.getenv("CAAS_SERVER_PORT"), os.getenv("CAAS_SERVER_ADDR"))
             res.write([[
     </table>
 </body>
-]]) 
+]])
             res.close()
         else
             return caas.err_404(req, res)

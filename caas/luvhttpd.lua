@@ -7,6 +7,7 @@ local _M = {
     _BASE_URI = "",
     _MAX_CONNECTIONS = 128,
     handlers = {},
+    filters = {},
     log = print,
 }
 local unpack = unpack or table.unpack
@@ -110,6 +111,13 @@ function _M.onconnection(client)
         if req.isreceivedheaders then
             -- match handler
             if not handler then
+                local filters = _M.matchfilters(req)
+                if filters then
+                    for _, filter in ipairs(filters) do
+                        -- call filter safely
+                        pcall(filter, req)
+                    end
+                end
                 handler = _M.matchhandler(req) or _M.err_404
                 -- call handler once
                 xpcall(function () 
@@ -165,14 +173,32 @@ function _M.handle(method, pattern, handler)
 end
 
 function _M.matchhandler(req)
-    for _, method_pattern in ipairs(_M.handlers) do
-        local captures = { req.path:match(method_pattern[2]) }
-        if method_pattern[1] == req.method and #captures > 0 then
+    for _, handlerdata in ipairs(_M.handlers) do
+        local captures = { req.path:match(handlerdata[2]) }
+        if handlerdata[1] == req.method and #captures > 0 then
             req.params = captures
-            return method_pattern[3]
+            return handlerdata[3]
         end
     end
 end
+
+function _M.filter(method, pattern, handler)
+    pattern = string.format("^%s%s$", _M._BASE_URI, pattern)
+    table.insert(_M.filters, { method, pattern, handler })
+    return _M
+end
+
+function _M.matchfilters(req)
+    local filters
+    for _, handlerdata in ipairs(_M.filters) do
+        if handlerdata[1] == req.method and req.path:match(handlerdata[2]) then
+            filters = filters or {}
+            table.insert(filters, handlerdata[3])
+        end
+    end
+    return filters
+end
+
 
 function _M.makerequest(client)
     local req = {
