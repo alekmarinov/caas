@@ -81,3 +81,27 @@ line3... - each next line have the format of label-name=label-value
 
 The prometheus plugin will handle request to /metrics and will collect all data from all .metrics folders in $CAAS_JOBS_DIR and create prometheus gauge for each .gauge file. **Currently only gauge is supported.**
 
+
+### Logger plugin
+
+Built-in plugin logging each request verbosely.
+To enable the logger plugin start caas server as given bellow:
+```bash
+$lua caas.lua --plugins logger
+caas 1.2.0 is listening on 0.0.0.0:8080
+Loading plugin logger 1.0.0
+```
+
+Then running a command like:
+```bash
+curl http://localhost:8080/job
+```
+will cause the server to log:
+
+```
+2020-03-03 12:37:43     GET /job HTTP/1.1
+  user-agent    curl/7.54.0
+  host  localhost:8080
+  accept        */*
+GET     /job    HTTP/1.1 200 OK
+```
