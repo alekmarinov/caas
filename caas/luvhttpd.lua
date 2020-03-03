@@ -201,8 +201,10 @@ end
 
 
 function _M.makerequest(client)
+    local peerinfo = uv.tcp_getsockname(client)
     local req = {
         client = client,
+        remote_ip = peerinfo.ip,
         host = _M.host,
         port = _M.port
     }

@@ -6,7 +6,7 @@ local _M = {
 
 function _M.init(caas)
     local function logreq(req)
-        print(os.date("%Y-%m-%d %H:%M:%S"), req.cmdline)
+        print(os.date("%Y-%m-%d %H:%M:%S"), req.remote_ip, req.cmdline)
         for name, value in pairs(req.headers) do
             print("  "..name, value)
         end

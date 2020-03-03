@@ -3,7 +3,7 @@ local server = require "caas.luvhttpd"
 local jobs  = require "caas.jobs"
 
 server._SERVER_SOFTWARE = "caas"
-server._VERSION = "1.2.1"
+server._VERSION = "1.2.2"
 server._BASE_URI = os.getenv("CAAS_BASE_URI") or ""
 
 caas = setmetatable({}, { __index = server })
