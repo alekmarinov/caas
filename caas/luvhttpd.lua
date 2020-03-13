@@ -111,17 +111,28 @@ function _M.onconnection(client)
         if req.isreceivedheaders then
             -- match handler
             if not handler then
-                local filters = _M.matchfilters(req)
+                local filters = _M.matchfilters(req, false)
                 if filters then
                     for _, filter in ipairs(filters) do
-                        -- call filter safely
+                        -- call filters before handler 
                         pcall(filter, req)
                     end
                 end
-                handler = _M.matchhandler(req) or _M.err_404
-                -- call handler once
-                xpcall(function () 
-                    handler(req, res)
+                handler = _M.matchhandler(req)
+                -- call handler
+                xpcall(function ()
+                    if handler then
+                        handler(req, res)
+                        local filters = _M.matchfilters(req, true)
+                        if filters then
+                            for _, filter in ipairs(filters) do
+                                -- call filters after handler 
+                                pcall(filter, req)
+                            end
+                        end
+                    else
+                        _M.err_404(req, res)
+                    end
                 end, function (err)
                     _M.err_500(req, res, debug.traceback(err))
                 end)
@@ -182,16 +193,16 @@ function _M.matchhandler(req)
     end
 end
 
-function _M.filter(method, pattern, handler)
+function _M.filter(method, pattern, handler, afterhandler)
     pattern = string.format("^%s%s$", _M._BASE_URI, pattern)
-    table.insert(_M.filters, { method, pattern, handler })
+    table.insert(_M.filters, { method, pattern, handler, not not afterhandler })
     return _M
 end
 
-function _M.matchfilters(req)
+function _M.matchfilters(req, afterhandler)
     local filters
     for _, handlerdata in ipairs(_M.filters) do
-        if handlerdata[1] == req.method and req.path:match(handlerdata[2]) then
+        if afterhandler == handlerdata[4] and handlerdata[1] == req.method and req.path:match(handlerdata[2]) then
             filters = filters or {}
             table.insert(filters, handlerdata[3])
         end
