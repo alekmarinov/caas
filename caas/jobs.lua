@@ -62,9 +62,9 @@ function _M.start(jobname, ondata)
     local stdio = {nil, stdout, stderr}
     local args = shlex.split(job.cmdline)
     local cmd = table.remove(args, 1)
-    _M.log(string.format("%s:%d starting %s \"%s\"", jobname, #instances, cmd, table.concat(args, "\" \"")))
+    _M.log(string.format("%s:%d %s starting %s \"%s\"", jobname, #instances, instance.datetime, cmd, table.concat(args, "\" \"")))
     instance.child, instance.pid = uv.spawn(cmd, { args = args, stdio = stdio }, function (code, signal)
-            _M.log(string.format("%s:%d finished (code=%s, signal=%d)", jobname, #instances, code, signal))
+            _M.log(string.format("%s:%d %s finished (code=%s, signal=%d)", jobname, #instances, os.date("%Y-%m-%d %H:%M:%S"), code, signal))
             uv.close(instance.child)
             instance.running = false
             instance.code = code
