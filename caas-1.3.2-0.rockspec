@@ -1,8 +1,8 @@
 package = "caas"
-version = "1.3.1-0"
+version = "1.3.2-0"
 source = {
    url = "git+https://github.com/alekmarinov/caas.git",
-   tag = "1.3.1"
+   tag = "1.3.2"
 }
 description = {
    summary = "API turning shell commands into API",
